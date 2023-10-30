@@ -23,14 +23,28 @@ app.get("/api/hello", function (req, res) {
 });
 
 app.post(
-  "api/shorturl",
+  "/api/shorturl",
   (req, res, next) => {
-    next();
+    const url = req.body.url;
+    const regex = /^https?:\/\//;
+    if (url.match(regex)) {
+      dns.lookup(url.replace(regex, ""), (err, address, family) => {
+        if (err) {
+          res.json({ error: "invalid url" });
+        } else {
+          next();
+        }
+      });
+    } else {
+      res.json({ error: "invalid url" });
+    }
   },
-  (req, res) => {}
+  (req, res) => {
+    res.json({ original_url: req.body.url, short_url: 1 });
+  }
 );
 
-app.get("api/shorturl/:short_url", (req, res) => {});
+app.get("/api/shorturl/:short_url", (req, res) => {});
 
 app.listen(port, function () {
   console.log(`Listening on port ${port}`);
