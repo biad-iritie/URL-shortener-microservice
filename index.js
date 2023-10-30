@@ -21,7 +21,15 @@ app.get("/", function (req, res) {
 app.get("/api/hello", function (req, res) {
   res.json({ greeting: "hello API" });
 });
+// GENERATE SHORT URL
+function generate_url() {
+  let min = 1;
+  let max = 10000;
 
+  let short = Math.ceil(Math.random() * (max - min + 1) + min);
+
+  return short;
+}
 app.post(
   "/api/shorturl",
   (req, res, next) => {
@@ -40,7 +48,7 @@ app.post(
     }
   },
   (req, res) => {
-    res.json({ original_url: req.body.url, short_url: 1 });
+    res.json({ original_url: req.body.url, short_url: generate_url() });
   }
 );
 
