@@ -26,7 +26,6 @@ app.get("/api/hello", function (req, res) {
 // MANAGEMENT OF SHORT URL
 function management_url(action, input) {
   db = "./db/data.json";
-  console.log(fs.existsSync(db));
   if (!fs.existsSync(db)) {
     fs.closeSync(fs.openSync(db, "w"));
   }
@@ -37,7 +36,7 @@ function management_url(action, input) {
       // add new url
       fs.writeFileSync(db, JSON.stringify([input], null, 2));
     } else {
-      let json_data = JSON.parse(file.toString());
+      let json_data = JSON.parse(data.toString());
       // check if url exists in our database
       let inputExist = [];
       data_saved = json_data.map((x) => x.original_url);
@@ -52,7 +51,7 @@ function management_url(action, input) {
     if (data.length == 0) {
       return;
     } else {
-      let json_data = JSON.parse(file);
+      let json_data = JSON.parse(data);
       return json_data;
     }
   }
@@ -85,7 +84,6 @@ app.post(
   "/api/shorturl",
   (req, res, next) => {
     const url = req.body.url;
-    console.log(url);
     const regex = /^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/gim;
     domain = url.match(regex);
     param = domain[0].replace(/^https?:\/\//i, "");
@@ -105,7 +103,26 @@ app.post(
   }
 );
 
-app.get("/api/shorturl/:short_url", (req, res) => {});
+app.get(
+  "/api/shorturl/:short_url",
+  (req, res, next) => {
+    let short_url = Number(req.params.short_url);
+    //load data
+    data = management_url("load");
+    // check if shorl_url exists
+    let short_urls = data.map((x) => x.short_url);
+    let check_url = short_urls.includes(short_url);
+    if (check_url && data != undefined) {
+      req.data = data[short_urls.indexOf(short_url)];
+      next();
+    } else {
+      res.json({ error: "invalid url" });
+    }
+  },
+  (req, res) => {
+    res.redirect(req.data.original_url);
+  }
+);
 
 app.listen(port, function () {
   console.log(`Listening on port ${port}`);
